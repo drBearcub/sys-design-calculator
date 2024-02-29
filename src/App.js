@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useQueryParamState } from './utils'; // Adjust the path as necessary
 
 const SECOND_PER_DAY = 86400;
 const DAYS_PER_MONTH = 30;
 const DAYS_PER_YEAR = 365;
 
 function Calculator() {
-  const [dailyActiveUsers, setDailyActiveUsers] = useState('');
-  const [clicksPerDay, setClicksPerDay] = useState('');
-  const [peakMultiplier, setPeakMultiplier] = useState('');
-  const [payloadSizeKb, setPayloadSizeKb] = useState('');
+  const [dailyActiveUsers, setDailyActiveUsers] = useQueryParamState('dau', '');
+  const [clicksPerDay, setClicksPerDay] = useQueryParamState('cpd', '');
+  const [peakMultiplier, setPeakMultiplier] = useQueryParamState('pm', '');
+  const [payloadSizeKb, setPayloadSizeKb] = useQueryParamState('psk', '');
   const [verbose, setVerbose] = useState(false);
 
   const [qps, setQps] = useState(0);
@@ -42,14 +44,24 @@ function Calculator() {
     setPeakBandwidthPerSec(peakBandwidthPerSec_calculated);
   }, [dailyActiveUsers, clicksPerDay, peakMultiplier, payloadSizeKb]);
 
-  // Helper function to ensure only numeric input
   const handleNumericChange = (value, setter) => {
-    if (/^\d*$/.test(value)) { // This regex allows only digits
+    if (/^\d*\.?\d*$/.test(value)) {
       setter(value);
     }
   };
-  
+
   const toggleVerbose = () => setVerbose(!verbose);
+
+  const createSharableLink = () => {
+    const params = new URLSearchParams({
+      dau: dailyActiveUsers,
+      cpd: clicksPerDay,
+      pm: peakMultiplier,
+      psk: payloadSizeKb,
+    }).toString();
+    const url = `${window.location.origin}${window.location.pathname}?${params}`;
+    navigator.clipboard.writeText(url).then(() => alert('URL copied to clipboard!'));
+  };
 
   return (
     <div>
@@ -92,6 +104,7 @@ function Calculator() {
       <div>Peak Bandwidth per second (MB): {verbose ? `${payloadSizeKb} * ${peakQps.toFixed(2)} / 1024 = ${peakBandwidthPerSec.toFixed(5)}` : peakBandwidthPerSec.toFixed(5)}</div>
       <div>Storage required for one year (GB): {verbose ? `${bandwidthPerSec.toFixed(5)} * ${SECOND_PER_DAY} * ${DAYS_PER_YEAR} / 1024 = ${storagePerYear.toFixed(1)}` : storagePerYear.toFixed(1)}</div>
       <div>Storage required for ten years (GB): {verbose ? `${storagePerYear.toFixed(1)} * 10 = ${storageForTenYears.toFixed(1)}` : storageForTenYears.toFixed(1)}</div>
+      <button onClick={createSharableLink}>Copy Sharable URL</button>
     </div>
   );
 }
