@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useQueryParamState } from './utils'; // Adjust the path as necessary
 
 const SECOND_PER_DAY = 86400;
@@ -60,8 +60,20 @@ function Calculator() {
       psk: payloadSizeKb,
     }).toString();
     const url = `${window.location.origin}${window.location.pathname}?${params}`;
-    navigator.clipboard.writeText(url).then(() => alert('URL copied to clipboard!'));
+    navigator.clipboard.writeText(url).then(() => {
+      // Display a toast notification instead of an alert
+      toast.info('URL copied to clipboard!', {
+        position: "top-center",
+        autoClose: 1500,
+        hideProgressBar: true,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: false,
+        progress: undefined,
+        });
+    });
   };
+
 
   return (
     <div>
